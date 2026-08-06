@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="DealCheck" />
+  <link rel="apple-touch-icon" href="icons/icon-180.png" />
+  <title>DealCheck</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">60-second property check</p>
+        <h1>DealCheck</h1>
+      </div>
+      <button id="resetBtn" class="text-button" type="button">Reset</button>
+    </header>
+
+    <section class="card input-card">
+      <h2>Deal inputs</h2>
+      <p class="section-note">Enter the key numbers you know. Results update instantly.</p>
+
+      <div class="form-grid">
+        <label>
+          <span>Purchase price</span>
+          <div class="money-input"><span>$</span><input id="purchasePrice" inputmode="decimal" type="number" value="2500000" min="0" step="10000" /></div>
+        </label>
+
+        <label>
+          <span>Building area</span>
+          <div class="unit-input"><input id="buildingArea" inputmode="decimal" type="number" value="1250" min="0" step="10" /><span>m²</span></div>
+        </label>
+
+        <div class="rent-entry">
+          <span class="field-label">Rental income</span>
+          <div class="segmented-control" role="group" aria-label="Rental income input method">
+            <button id="rentModeSqm" class="segment active" type="button" aria-pressed="true">$/m²</button>
+            <button id="rentModeAnnual" class="segment" type="button" aria-pressed="false">Annual rent</button>
+          </div>
+
+          <label id="rentPerSqmField" class="rent-field">
+            <span>Rent per m² / year</span>
+            <div class="money-input"><span>$</span><input id="rentPerSqm" inputmode="decimal" type="number" value="240" min="0" step="5" /></div>
+          </label>
+
+          <label id="annualRentField" class="rent-field" hidden>
+            <span>Total annual rent</span>
+            <div class="money-input"><span>$</span><input id="annualRent" inputmode="decimal" type="number" value="300000" min="0" step="1000" /></div>
+          </label>
+        </div>
+
+        <label>
+          <span>Vacancy allowance</span>
+          <div class="unit-input"><input id="vacancyRate" inputmode="decimal" type="number" value="5" min="0" max="100" step="0.5" /><span>%</span></div>
+        </label>
+
+        <label>
+          <span>Annual outgoings</span>
+          <div class="money-input"><span>$</span><input id="annualOutgoings" inputmode="decimal" type="number" value="35000" min="0" step="1000" /></div>
+        </label>
+
+        <label>
+          <span>Construction / upgrades</span>
+          <div class="money-input"><span>$</span><input id="constructionCost" inputmode="decimal" type="number" value="150000" min="0" step="5000" /></div>
+        </label>
+
+        <label>
+          <span>Deposit</span>
+          <div class="unit-input"><input id="depositRate" inputmode="decimal" type="number" value="35" min="0" max="100" step="1" /><span>%</span></div>
+        </label>
+
+        <label>
+          <span>Interest rate</span>
+          <div class="unit-input"><input id="interestRate" inputmode="decimal" type="number" value="7.5" min="0" max="30" step="0.1" /><span>%</span></div>
+        </label>
+
+        <label>
+          <span>Holding period</span>
+          <div class="unit-input"><input id="holdingPeriod" inputmode="numeric" type="number" value="3" min="1" max="30" step="1" /><span>years</span></div>
+        </label>
+
+        <label>
+          <span>Expected annual growth</span>
+          <div class="unit-input"><input id="growthRate" inputmode="decimal" type="number" value="3" min="-50" max="50" step="0.5" /><span>%</span></div>
+        </label>
+
+        <label class="full-width">
+          <span>Other acquisition / sale costs</span>
+          <div class="money-input"><span>$</span><input id="otherCosts" inputmode="decimal" type="number" value="75000" min="0" step="1000" /></div>
+        </label>
+      </div>
+    </section>
+
+    <section id="verdictCard" class="card verdict-card investigate">
+      <div>
+        <p class="eyebrow">Initial verdict</p>
+        <h2 id="verdictTitle">Worth investigating</h2>
+        <p id="verdictText">The numbers are close enough to justify a deeper feasibility review.</p>
+      </div>
+      <div id="scoreBadge" class="score-badge">72</div>
+    </section>
+
+    <section class="metrics-grid">
+      <article class="metric-card primary">
+        <span>Gross yield</span>
+        <strong id="grossYield">0.0%</strong>
+      </article>
+      <article class="metric-card">
+        <span>Net yield</span>
+        <strong id="netYield">0.0%</strong>
+      </article>
+      <article class="metric-card">
+        <span>Estimated ROI</span>
+        <strong id="roi">0.0%</strong>
+      </article>
+      <article class="metric-card">
+        <span>Equity required</span>
+        <strong id="equityRequired">$0</strong>
+      </article>
+      <article class="metric-card">
+        <span>Annual net income</span>
+        <strong id="annualNetIncome">$0</strong>
+      </article>
+      <article class="metric-card">
+        <span>Estimated exit value</span>
+        <strong id="exitValue">$0</strong>
+      </article>
+      <article class="metric-card">
+        <span>Profit after hold</span>
+        <strong id="profitAfterHold">$0</strong>
+      </article>
+      <article class="metric-card">
+        <span>Break-even rent</span>
+        <strong id="breakEvenRent">$0/m²</strong>
+      </article>
+    </section>
+
+    <section class="card assumptions-card">
+      <h2>How this quick check works</h2>
+      <p>ROI is a simplified, pre-tax estimate based on rental cash flow, interest-only debt, improvement costs, acquisition/sale costs, and the projected exit value. It is a screening tool, not a full feasibility or valuation.</p>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js'));
+    }
+  </script>
+</body>
+</html>
