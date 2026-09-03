@@ -7,6 +7,7 @@ An iPhone-first residential property acquisition and house-flip screening app fo
 - Editable buy price, forecast sale price and 6–8 month holding period
 - Detailed acquisition, finance, renovation, holding and selling costs
 - Gross sale amount, gross profit, final net profit, cash required, cash ROI and break-even sale price
+- Dedicated tax allowance using a default 28% rate, with pre-tax and after-tax profit shown separately
 - Green / amber / red result using editable profit and ROI targets
 - Automatic draft saving plus up to 30 named deal snapshots on the device
 - CSV report sharing through the iPhone share sheet, including Google Drive

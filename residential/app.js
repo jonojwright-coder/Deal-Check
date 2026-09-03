@@ -2,6 +2,7 @@ import { calculateDeal, DEFAULTS, NUMERIC_INPUT_IDS, TEXT_INPUT_IDS } from './co
 
 const CURRENT_KEY = 'dealcheck-residential-current-v1';
 const SAVED_KEY = 'dealcheck-residential-saved-v1';
+const TAX_MIGRATION_KEY = 'dealcheck-residential-tax-default-28-v1';
 const ALL_INPUT_IDS = [...TEXT_INPUT_IDS, ...NUMERIC_INPUT_IDS];
 
 const moneyFormatter = new Intl.NumberFormat('en-NZ', {
@@ -96,6 +97,8 @@ function render() {
     cashRoi: percent(result.cashRoi),
     forecastSale: money(result.forecastSale),
     grossProfit: money(result.grossProfit),
+    headlineTaxAllowance: money(result.taxAllowance),
+    preTaxProfit: money(result.netProfitBeforeTax),
     purchaseLoan: money(result.purchaseLoan),
     cashRequired: money(result.cashRequired),
     acquisitionCosts: money(result.acquisitionCosts),
@@ -112,7 +115,7 @@ function render() {
     financeCostSummary: money(result.financeCosts),
     holdingCostSummary: money(result.holdingCosts),
     sellingCostSummary: money(result.sellingCosts),
-    targetSummary: `${money(result.targetNetProfit)} · ${percent(result.targetCashRoi)}`
+    targetSummary: `${money(result.targetNetProfit)} · ${percent(result.targetCashRoi)} · Tax ${percent(inputs.taxAllowancePercent)}`
   };
 
   Object.entries(outputs).forEach(([id, value]) => {
@@ -120,7 +123,8 @@ function render() {
     if (element) element.textContent = value;
   });
 
-  document.getElementById('taxRow').hidden = result.taxAllowance <= 0;
+  document.getElementById('headlineTaxNote').textContent = `${percent(inputs.taxAllowancePercent)} of positive forecast pre-tax profit`;
+  document.getElementById('taxRowLabel').textContent = `Tax allowance (${percent(inputs.taxAllowancePercent)})`;
   document.getElementById('netProfitNote').textContent = result.taxAllowance > 0
     ? 'After costs and entered tax allowance'
     : 'After all entered costs, before tax';
@@ -257,7 +261,7 @@ const REPORT_FIELDS = [
   ['Selling', 'Other selling costs', 'otherSellingCosts', 'money'],
   ['Targets', 'Minimum net profit', 'targetNetProfit', 'money'],
   ['Targets', 'Minimum cash ROI', 'targetCashRoi', 'percent'],
-  ['Targets', 'Tax allowance', 'taxAllowancePercent', 'percent']
+  ['Tax', 'Tax rate', 'taxAllowancePercent', 'percent']
 ];
 
 function reportValue(value, type) {
@@ -365,6 +369,10 @@ document.getElementById('resetBtn').addEventListener('click', () => {
 });
 
 const current = storageRead(CURRENT_KEY, null);
+if (current && !localStorage.getItem(TAX_MIGRATION_KEY)) {
+  if (Number(current.taxAllowancePercent) === 0) current.taxAllowancePercent = DEFAULTS.taxAllowancePercent;
+  localStorage.setItem(TAX_MIGRATION_KEY, 'complete');
+}
 setInputs(current || DEFAULTS);
 render();
 updateSavedCount();

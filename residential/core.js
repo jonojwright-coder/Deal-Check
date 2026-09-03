@@ -38,7 +38,7 @@ export const DEFAULTS = {
   otherSellingCosts: 1000,
   targetNetProfit: 75000,
   targetCashRoi: 15,
-  taxAllowancePercent: 0
+  taxAllowancePercent: 28
 };
 
 const value = (input, key) => Math.max(0, Number(input[key]) || 0);

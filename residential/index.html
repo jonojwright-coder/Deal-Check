@@ -57,6 +57,16 @@
         <strong id="grossProfit">$0</strong>
         <small>Before buying, finance, holding and selling costs</small>
       </article>
+      <article class="hero-metric tax-metric">
+        <span>Tax allowance</span>
+        <strong id="headlineTaxAllowance">$0</strong>
+        <small id="headlineTaxNote">28% of forecast pre-tax profit</small>
+      </article>
+      <article class="hero-metric">
+        <span>Net profit before tax</span>
+        <strong id="preTaxProfit">$0</strong>
+        <small>After all entered project costs</small>
+      </article>
     </section>
 
     <section class="card action-card">
@@ -231,8 +241,8 @@
 
     <details class="card input-section">
       <summary>
-        <span><small>Your traffic-light rules</small>Targets and tax allowance</span>
-        <strong id="targetSummary">$75k · 15%</strong>
+        <span><small>Your traffic-light rules</small>Targets and tax</span>
+        <strong id="targetSummary">$75k · 15% · Tax 28%</strong>
       </summary>
       <div class="details-body form-grid">
         <label>
@@ -244,9 +254,9 @@
           <div class="affix-input suffix"><input id="targetCashRoi" type="number" inputmode="decimal" min="0" max="500" step="1" value="15"><span>%</span></div>
         </label>
         <label>
-          <span>Optional tax allowance</span>
-          <div class="affix-input suffix"><input id="taxAllowancePercent" type="number" inputmode="decimal" min="0" max="100" step="1" value="0"><span>% of profit</span></div>
-          <small class="field-help">Leave at 0 unless you want a simple provisional allowance.</small>
+          <span>Tax rate</span>
+          <div class="affix-input suffix"><input id="taxAllowancePercent" type="number" inputmode="decimal" min="0" max="100" step="1" value="28"><span>% of profit</span></div>
+          <small class="field-help">Applied to positive forecast profit as a provisional allowance.</small>
         </label>
       </div>
     </details>
@@ -269,8 +279,8 @@
         <div class="total-row"><dt>Total project cost</dt><dd id="totalProjectCost">$0</dd></div>
         <div><dt>Break-even sale price</dt><dd id="breakEvenSale">$0</dd></div>
         <div><dt>Net margin on sale</dt><dd id="netMargin">0.0%</dd></div>
-        <div id="taxRow" hidden><dt>Tax allowance</dt><dd id="taxAllowance">$0</dd></div>
-        <div class="profit-row"><dt>Final net profit</dt><dd id="finalNetProfit">$0</dd></div>
+        <div id="taxRow"><dt id="taxRowLabel">Tax allowance (28%)</dt><dd id="taxAllowance">$0</dd></div>
+        <div class="profit-row"><dt>Final net profit after tax</dt><dd id="finalNetProfit">$0</dd></div>
       </dl>
     </section>
 

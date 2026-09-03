@@ -141,6 +141,8 @@ h2 { margin-bottom: 0; font-size: 1.2rem; letter-spacing: -0.025em; }
 .hero-metric small { margin-top: 8px; color: var(--muted); font-size: 0.7rem; line-height: 1.3; }
 .net-metric { color: #fff; border-color: transparent; background: linear-gradient(145deg, var(--navy-2), var(--navy)); }
 .net-metric span, .net-metric small { color: #bdc7d7; }
+.tax-metric { border-color: #fdba74; background: #fff7ed; }
+.tax-metric span { color: #c2410c; }
 
 .action-card { padding: 12px; }
 .action-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
@@ -271,6 +273,10 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(249,115,22
   .hero-metric strong { overflow-wrap: anywhere; }
   .saved-deal { grid-template-columns: 1fr; }
   .saved-actions { grid-template-columns: 1fr 1fr; }
+}
+
+@media (min-width: 640px) {
+  .hero-results { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 @media print {
