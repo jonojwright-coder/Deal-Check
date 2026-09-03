@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en-NZ">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#111827">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="DealCheck">
+  <meta name="description" content="A fast residential property flip feasibility calculator for New Zealand.">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="styles.css">
+  <title>DealCheck · Residential Flip</title>
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Residential flip feasibility</p>
+        <h1>DealCheck</h1>
+      </div>
+      <button id="resetBtn" class="quiet-button" type="button">New deal</button>
+    </header>
+
+    <section id="verdictCard" class="verdict-card amber" aria-live="polite">
+      <div class="signal-wrap" aria-hidden="true">
+        <span class="signal red-light"></span>
+        <span class="signal amber-light"></span>
+        <span class="signal green-light"></span>
+      </div>
+      <div class="verdict-copy">
+        <p id="verdictLabel" class="verdict-label">AMBER · REVIEW THE NUMBERS</p>
+        <h2 id="verdictTitle">Worth investigating</h2>
+        <p id="verdictText">Enter the property figures to test the deal against your targets.</p>
+      </div>
+    </section>
+
+    <section class="hero-results" aria-label="Headline results">
+      <article class="hero-metric net-metric">
+        <span>Forecast net profit</span>
+        <strong id="netProfit">$0</strong>
+        <small id="netProfitNote">After all entered costs</small>
+      </article>
+      <article class="hero-metric">
+        <span>Cash ROI</span>
+        <strong id="cashRoi">0.0%</strong>
+        <small>Net profit ÷ cash required</small>
+      </article>
+      <article class="hero-metric">
+        <span>Forecast sale</span>
+        <strong id="forecastSale">$0</strong>
+        <small>Gross exit amount</small>
+      </article>
+      <article class="hero-metric">
+        <span>Gross profit</span>
+        <strong id="grossProfit">$0</strong>
+        <small>Before buying, finance, holding and selling costs</small>
+      </article>
+    </section>
+
+    <section class="card action-card">
+      <div class="action-grid">
+        <button id="shareBtn" class="primary-button" type="button">
+          <span>Share / save report</span>
+          <small>Choose Google Drive on iPhone</small>
+        </button>
+        <button id="saveBtn" class="secondary-button" type="button">Save on phone</button>
+        <button id="savedDealsBtn" class="secondary-button" type="button">Saved deals <span id="savedCount" class="count-badge">0</span></button>
+        <button id="printBtn" class="secondary-button" type="button">PDF / Print</button>
+      </div>
+      <p id="actionStatus" class="action-status" role="status"></p>
+    </section>
+
+    <section class="card form-card deal-basics">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">Start here</p>
+          <h2>Property and headline numbers</h2>
+        </div>
+      </div>
+      <div class="form-grid">
+        <label class="full-width">
+          <span>Deal name</span>
+          <input id="dealName" type="text" autocomplete="off" value="New residential flip" placeholder="e.g. Falls Street flip">
+        </label>
+        <label class="full-width">
+          <span>Property address</span>
+          <input id="propertyAddress" type="text" autocomplete="street-address" placeholder="Enter address">
+        </label>
+        <label>
+          <span>Buy price</span>
+          <div class="affix-input prefix"><span>$</span><input id="purchasePrice" type="number" inputmode="decimal" min="0" step="5000" value="850000"></div>
+        </label>
+        <label>
+          <span>Forecast sale price</span>
+          <div class="affix-input prefix"><span>$</span><input id="salePrice" type="number" inputmode="decimal" min="0" step="5000" value="1100000"></div>
+        </label>
+        <label>
+          <span>Holding period</span>
+          <div class="affix-input suffix"><input id="holdingMonths" type="number" inputmode="decimal" min="0" max="36" step="0.5" value="7"><span>months</span></div>
+        </label>
+      </div>
+    </section>
+
+    <details class="card input-section" open>
+      <summary>
+        <span><small>Funding</small>Finance</span>
+        <strong id="financeCostSummary">$0</strong>
+      </summary>
+      <div class="details-body form-grid">
+        <label>
+          <span>Purchase finance</span>
+          <div class="affix-input suffix"><input id="financePercent" type="number" inputmode="decimal" min="0" max="100" step="1" value="75"><span>%</span></div>
+        </label>
+        <label>
+          <span>Annual interest rate</span>
+          <div class="affix-input suffix"><input id="interestRate" type="number" inputmode="decimal" min="0" max="40" step="0.1" value="11.5"><span>%</span></div>
+        </label>
+        <label>
+          <span>Lender fee</span>
+          <div class="affix-input suffix"><input id="lenderFeePercent" type="number" inputmode="decimal" min="0" max="20" step="0.1" value="2"><span>% of loan</span></div>
+        </label>
+        <label>
+          <span>Lender legal / valuation</span>
+          <div class="affix-input prefix"><span>$</span><input id="lenderFixedCosts" type="number" inputmode="decimal" min="0" step="250" value="3500"></div>
+        </label>
+        <label>
+          <span>Renovation financed</span>
+          <div class="affix-input suffix"><input id="renovationFinancePercent" type="number" inputmode="decimal" min="0" max="100" step="5" value="0"><span>%</span></div>
+          <small class="field-help">Interest assumes the renovation loan is half drawn on average.</small>
+        </label>
+      </div>
+    </details>
+
+    <details class="card input-section">
+      <summary>
+        <span><small>Due diligence and settlement</small>Acquisition costs</span>
+        <strong id="acquisitionCostSummary">$0</strong>
+      </summary>
+      <div class="details-body form-grid">
+        <label>
+          <span>Legal / due diligence</span>
+          <div class="affix-input prefix"><span>$</span><input id="legalDueDiligence" type="number" inputmode="decimal" min="0" step="250" value="4000"></div>
+        </label>
+        <label>
+          <span>Building report / LIM</span>
+          <div class="affix-input prefix"><span>$</span><input id="buildingReports" type="number" inputmode="decimal" min="0" step="100" value="2000"></div>
+        </label>
+        <label>
+          <span>Independent valuation</span>
+          <div class="affix-input prefix"><span>$</span><input id="valuationCost" type="number" inputmode="decimal" min="0" step="100" value="1200"></div>
+        </label>
+        <label>
+          <span>Other acquisition costs</span>
+          <div class="affix-input prefix"><span>$</span><input id="otherAcquisitionCosts" type="number" inputmode="decimal" min="0" step="250" value="1500"></div>
+        </label>
+      </div>
+    </details>
+
+    <details class="card input-section" open>
+      <summary>
+        <span><small>Works allowance</small>Renovation</span>
+        <strong id="renovationCostSummary">$0</strong>
+      </summary>
+      <div class="details-body form-grid">
+        <label>
+          <span>Renovation budget</span>
+          <div class="affix-input prefix"><span>$</span><input id="renovationBudget" type="number" inputmode="decimal" min="0" step="1000" value="100000"></div>
+        </label>
+        <label>
+          <span>Contingency</span>
+          <div class="affix-input suffix"><input id="contingencyPercent" type="number" inputmode="decimal" min="0" max="100" step="1" value="10"><span>%</span></div>
+        </label>
+        <label>
+          <span>Consent / consultants</span>
+          <div class="affix-input prefix"><span>$</span><input id="consentConsultants" type="number" inputmode="decimal" min="0" step="500" value="5000"></div>
+        </label>
+      </div>
+    </details>
+
+    <details class="card input-section">
+      <summary>
+        <span><small>During the project</small>Holding costs</span>
+        <strong id="holdingCostSummary">$0</strong>
+      </summary>
+      <div class="details-body form-grid">
+        <label>
+          <span>Council rates</span>
+          <div class="affix-input split"><span>$</span><input id="ratesAnnual" type="number" inputmode="decimal" min="0" step="100" value="3500"><span>/ year</span></div>
+        </label>
+        <label>
+          <span>Insurance</span>
+          <div class="affix-input split"><span>$</span><input id="insuranceMonthly" type="number" inputmode="decimal" min="0" step="25" value="250"><span>/ month</span></div>
+        </label>
+        <label>
+          <span>Power / water</span>
+          <div class="affix-input split"><span>$</span><input id="utilitiesMonthly" type="number" inputmode="decimal" min="0" step="25" value="250"><span>/ month</span></div>
+        </label>
+        <label>
+          <span>Other holding costs</span>
+          <div class="affix-input split"><span>$</span><input id="otherHoldingMonthly" type="number" inputmode="decimal" min="0" step="25" value="150"><span>/ month</span></div>
+        </label>
+      </div>
+    </details>
+
+    <details class="card input-section">
+      <summary>
+        <span><small>Exit costs</small>Selling</span>
+        <strong id="sellingCostSummary">$0</strong>
+      </summary>
+      <div class="details-body form-grid">
+        <label>
+          <span>Agent commission</span>
+          <div class="affix-input suffix"><input id="agentCommissionPercent" type="number" inputmode="decimal" min="0" max="20" step="0.1" value="3.5"><span>% of sale</span></div>
+        </label>
+        <label>
+          <span>Marketing / staging</span>
+          <div class="affix-input prefix"><span>$</span><input id="marketingStaging" type="number" inputmode="decimal" min="0" step="250" value="5000"></div>
+        </label>
+        <label>
+          <span>Sale legal costs</span>
+          <div class="affix-input prefix"><span>$</span><input id="saleLegal" type="number" inputmode="decimal" min="0" step="250" value="2500"></div>
+        </label>
+        <label>
+          <span>Other selling costs</span>
+          <div class="affix-input prefix"><span>$</span><input id="otherSellingCosts" type="number" inputmode="decimal" min="0" step="250" value="1000"></div>
+        </label>
+      </div>
+    </details>
+
+    <details class="card input-section">
+      <summary>
+        <span><small>Your traffic-light rules</small>Targets and tax allowance</span>
+        <strong id="targetSummary">$75k · 15%</strong>
+      </summary>
+      <div class="details-body form-grid">
+        <label>
+          <span>Minimum net profit</span>
+          <div class="affix-input prefix"><span>$</span><input id="targetNetProfit" type="number" inputmode="decimal" min="0" step="5000" value="75000"></div>
+        </label>
+        <label>
+          <span>Minimum cash ROI</span>
+          <div class="affix-input suffix"><input id="targetCashRoi" type="number" inputmode="decimal" min="0" max="500" step="1" value="15"><span>%</span></div>
+        </label>
+        <label>
+          <span>Optional tax allowance</span>
+          <div class="affix-input suffix"><input id="taxAllowancePercent" type="number" inputmode="decimal" min="0" max="100" step="1" value="0"><span>% of profit</span></div>
+          <small class="field-help">Leave at 0 unless you want a simple provisional allowance.</small>
+        </label>
+      </div>
+    </details>
+
+    <section class="card breakdown-card">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">Forecast</p>
+          <h2>Cost and return breakdown</h2>
+        </div>
+      </div>
+      <dl class="breakdown-list">
+        <div><dt>Purchase loan</dt><dd id="purchaseLoan">$0</dd></div>
+        <div><dt>Estimated cash required</dt><dd id="cashRequired">$0</dd></div>
+        <div><dt>Acquisition costs</dt><dd id="acquisitionCosts">$0</dd></div>
+        <div><dt>Renovation incl. contingency</dt><dd id="renovationCosts">$0</dd></div>
+        <div><dt>Finance costs incl. interest</dt><dd id="financeCosts">$0</dd></div>
+        <div><dt>Holding costs</dt><dd id="holdingCosts">$0</dd></div>
+        <div><dt>Selling costs</dt><dd id="sellingCosts">$0</dd></div>
+        <div class="total-row"><dt>Total project cost</dt><dd id="totalProjectCost">$0</dd></div>
+        <div><dt>Break-even sale price</dt><dd id="breakEvenSale">$0</dd></div>
+        <div><dt>Net margin on sale</dt><dd id="netMargin">0.0%</dd></div>
+        <div id="taxRow" hidden><dt>Tax allowance</dt><dd id="taxAllowance">$0</dd></div>
+        <div class="profit-row"><dt>Final net profit</dt><dd id="finalNetProfit">$0</dd></div>
+      </dl>
+    </section>
+
+    <section class="card note-card">
+      <h2>Quick-screen assumptions</h2>
+      <p>Interest is calculated simply over the holding period on the purchase loan plus half of any renovation finance. Agent commission uses a flat percentage. Tax is not calculated unless you enter an allowance. Confirm finance, GST, income-tax and sale-cost treatment with your advisers before committing.</p>
+    </section>
+  </main>
+
+  <dialog id="savedDealsDialog" class="saved-dialog">
+    <div class="dialog-heading">
+      <div>
+        <p class="section-kicker">Stored on this device</p>
+        <h2>Saved deals</h2>
+      </div>
+      <button id="closeSavedDealsBtn" class="icon-button" type="button" aria-label="Close saved deals">×</button>
+    </div>
+    <div id="savedDealsList" class="saved-deals-list"></div>
+  </dialog>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
