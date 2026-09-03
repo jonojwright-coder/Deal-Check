@@ -9,7 +9,7 @@ An iPhone-first residential property acquisition and house-flip screening app fo
 - Gross sale amount, gross profit, final net profit, cash required, cash ROI and break-even sale price
 - Dedicated tax allowance using a default 28% rate, with pre-tax and after-tax profit shown separately
 - Green / amber / red result using editable profit and ROI targets
-- Automatic draft saving plus up to 30 named deal snapshots on the device
+- Automatic draft saving plus up to 30 named deal snapshots, backed up in the device's durable app database
 - CSV report sharing through the iPhone share sheet, including Google Drive
 - Print-friendly report for PDF saving
 - Installable Home Screen app with offline support after the first successful load

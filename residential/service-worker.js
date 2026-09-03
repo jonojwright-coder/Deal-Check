@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dealcheck-residential-v4';
+const CACHE_NAME = 'dealcheck-residential-v5';
 const APP_ASSETS = [
   './',
   './index.html',

@@ -3,6 +3,10 @@ import { calculateDeal, DEFAULTS, NUMERIC_INPUT_IDS, TEXT_INPUT_IDS } from './co
 const CURRENT_KEY = 'dealcheck-residential-current-v1';
 const SAVED_KEY = 'dealcheck-residential-saved-v1';
 const TAX_MIGRATION_KEY = 'dealcheck-residential-tax-default-28-v1';
+const DATABASE_NAME = 'dealcheck-residential-storage';
+const DATABASE_VERSION = 1;
+const DEAL_STORE = 'saved-deals';
+const META_STORE = 'meta';
 const ALL_INPUT_IDS = [...TEXT_INPUT_IDS, ...NUMERIC_INPUT_IDS];
 
 const moneyFormatter = new Intl.NumberFormat('en-NZ', {
@@ -50,8 +54,74 @@ function storageWrite(key, value) {
   }
 }
 
+let databasePromise;
+function openDatabase() {
+  if (!('indexedDB' in window)) return Promise.reject(new Error('IndexedDB unavailable'));
+  if (databasePromise) return databasePromise;
+
+  databasePromise = new Promise((resolve, reject) => {
+    const request = indexedDB.open(DATABASE_NAME, DATABASE_VERSION);
+    request.onupgradeneeded = () => {
+      const database = request.result;
+      if (!database.objectStoreNames.contains(DEAL_STORE)) database.createObjectStore(DEAL_STORE, { keyPath: 'id' });
+      if (!database.objectStoreNames.contains(META_STORE)) database.createObjectStore(META_STORE, { keyPath: 'key' });
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error || new Error('Could not open app database'));
+  });
+
+  return databasePromise;
+}
+
+async function databasePut(storeName, value) {
+  const database = await openDatabase();
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction(storeName, 'readwrite');
+    transaction.objectStore(storeName).put(value);
+    transaction.oncomplete = () => resolve(true);
+    transaction.onerror = () => reject(transaction.error || new Error('Could not save app data'));
+    transaction.onabort = () => reject(transaction.error || new Error('App data save was interrupted'));
+  });
+}
+
+async function databaseGetAll(storeName) {
+  const database = await openDatabase();
+  return new Promise((resolve, reject) => {
+    const request = database.transaction(storeName, 'readonly').objectStore(storeName).getAll();
+    request.onsuccess = () => resolve(request.result || []);
+    request.onerror = () => reject(request.error || new Error('Could not read app data'));
+  });
+}
+
+async function databaseGet(storeName, key) {
+  const database = await openDatabase();
+  return new Promise((resolve, reject) => {
+    const request = database.transaction(storeName, 'readonly').objectStore(storeName).get(key);
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error || new Error('Could not read app data'));
+  });
+}
+
+async function databaseDelete(storeName, key) {
+  const database = await openDatabase();
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction(storeName, 'readwrite');
+    transaction.objectStore(storeName).delete(key);
+    transaction.oncomplete = () => resolve(true);
+    transaction.onerror = () => reject(transaction.error || new Error('Could not delete app data'));
+    transaction.onabort = () => reject(transaction.error || new Error('App data delete was interrupted'));
+  });
+}
+
+let currentSaveTimer;
 function saveCurrent() {
-  storageWrite(CURRENT_KEY, getInputs());
+  const inputs = getInputs();
+  const savedLocally = storageWrite(CURRENT_KEY, inputs);
+  clearTimeout(currentSaveTimer);
+  currentSaveTimer = setTimeout(() => {
+    databasePut(META_STORE, { key: 'current-deal', value: inputs }).catch(() => {});
+  }, 250);
+  return savedLocally;
 }
 
 function renderVerdict(result) {
@@ -141,18 +211,22 @@ function setStatus(message) {
   statusTimer = setTimeout(() => { status.textContent = ''; }, 5000);
 }
 
-function savedDeals() {
+function locallySavedDeals() {
   const saved = storageRead(SAVED_KEY, []);
   return Array.isArray(saved) ? saved : [];
+}
+
+let savedDealsCache = locallySavedDeals();
+function savedDeals() {
+  return savedDealsCache;
 }
 
 function updateSavedCount() {
   document.getElementById('savedCount').textContent = String(savedDeals().length);
 }
 
-function saveSnapshot(showMessage = true) {
+async function saveSnapshot(showMessage = true) {
   const { inputs, result } = render();
-  const snapshots = savedDeals();
   const snapshot = {
     id: globalThis.crypto?.randomUUID?.() || String(Date.now()),
     savedAt: new Date().toISOString(),
@@ -164,10 +238,15 @@ function saveSnapshot(showMessage = true) {
       salePrice: result.forecastSale
     }
   };
-  snapshots.unshift(snapshot);
-  const saved = storageWrite(SAVED_KEY, snapshots.slice(0, 30));
+  savedDealsCache = [snapshot, ...savedDeals()].slice(0, 30);
+  const savedLocally = storageWrite(SAVED_KEY, savedDealsCache);
+  let savedToDatabase = false;
+  try {
+    await databasePut(DEAL_STORE, snapshot);
+    savedToDatabase = true;
+  } catch (_) {}
   updateSavedCount();
-  if (showMessage) setStatus(saved ? 'Deal saved on this device.' : 'This browser could not save the deal.');
+  if (showMessage) setStatus(savedLocally || savedToDatabase ? 'Deal saved securely on this iPhone.' : 'This browser could not save the deal.');
   return snapshot;
 }
 
@@ -221,9 +300,11 @@ function renderSavedDeals() {
     deleteButton.type = 'button';
     deleteButton.className = 'delete-button';
     deleteButton.textContent = 'Delete';
-    deleteButton.addEventListener('click', () => {
+    deleteButton.addEventListener('click', async () => {
       if (!window.confirm('Delete this saved deal from this device?')) return;
-      storageWrite(SAVED_KEY, savedDeals().filter(item => item.id !== snapshot.id));
+      savedDealsCache = savedDeals().filter(item => item.id !== snapshot.id);
+      storageWrite(SAVED_KEY, savedDealsCache);
+      try { await databaseDelete(DEAL_STORE, snapshot.id); } catch (_) {}
       renderSavedDeals();
       updateSavedCount();
     });
@@ -348,7 +429,7 @@ ALL_INPUT_IDS.forEach(id => {
   });
 });
 
-document.getElementById('saveBtn').addEventListener('click', () => saveSnapshot());
+document.getElementById('saveBtn').addEventListener('click', () => { saveSnapshot(); });
 document.getElementById('shareBtn').addEventListener('click', shareReport);
 document.getElementById('printBtn').addEventListener('click', () => window.print());
 document.getElementById('savedDealsBtn').addEventListener('click', () => {
@@ -376,6 +457,42 @@ if (current && !localStorage.getItem(TAX_MIGRATION_KEY)) {
 setInputs(current || DEFAULTS);
 render();
 updateSavedCount();
+
+async function synchroniseDurableStorage() {
+  try {
+    if (navigator.storage?.persist) await navigator.storage.persist();
+
+    const [databaseDeals, databaseCurrent] = await Promise.all([
+      databaseGetAll(DEAL_STORE),
+      databaseGet(META_STORE, 'current-deal')
+    ]);
+
+    const mergedDeals = new Map();
+    [...savedDealsCache, ...databaseDeals].forEach(deal => {
+      if (deal?.id) mergedDeals.set(deal.id, deal);
+    });
+    savedDealsCache = [...mergedDeals.values()]
+      .sort((a, b) => String(b.savedAt || '').localeCompare(String(a.savedAt || '')))
+      .slice(0, 30);
+    storageWrite(SAVED_KEY, savedDealsCache);
+
+    await Promise.all(savedDealsCache.map(deal => databasePut(DEAL_STORE, deal)));
+
+    if (current) {
+      await databasePut(META_STORE, { key: 'current-deal', value: getInputs() });
+    } else if (databaseCurrent?.value) {
+      setInputs(databaseCurrent.value);
+      render();
+      storageWrite(CURRENT_KEY, databaseCurrent.value);
+    }
+
+    updateSavedCount();
+  } catch (_) {
+    updateSavedCount();
+  }
+}
+
+synchroniseDurableStorage();
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js'));
